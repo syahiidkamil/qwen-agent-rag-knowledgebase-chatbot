@@ -1,0 +1,4 @@
+.DS_Store
+misc/screenshots/*
+!misc/screenshots/.gitkeep
+misc/browser-storage

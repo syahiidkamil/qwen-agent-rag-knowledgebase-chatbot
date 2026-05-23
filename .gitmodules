@@ -1,0 +1,7 @@
+# [submodule "docs/external-information/claude-plugins-official"]
+# 	path = docs/external-information/claude-plugins-official
+# 	url = git@github.com:anthropics/claude-plugins-official.git
+[submodule "docs/external-information/skills"]
+	path = docs/external-information/skills
+	url = git@github.com:anthropics/skills.git
+	branch = main
