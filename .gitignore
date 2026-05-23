@@ -2,3 +2,4 @@
 misc/screenshots/*
 !misc/screenshots/.gitkeep
 misc/browser-storage
+.playwright-mcp

@@ -5,3 +5,9 @@
 	path = docs/external-information/skills
 	url = git@github.com:anthropics/skills.git
 	branch = main
+[submodule "repos/fast-api-backend"]
+	path = repos/fast-api-backend
+	url = git@github.com:syahiidkamil/be-qwen-agent-rag.git
+[submodule "repos/react-vite-frontend"]
+	path = repos/react-vite-frontend
+	url = git@github.com:syahiidkamil/fe-qwen-agent-rag.git
