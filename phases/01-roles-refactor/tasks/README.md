@@ -29,9 +29,9 @@ graph TD
 - [x] [TASK-01-003](./TASK-01-003.md) — Frontend role-aware auth store + RoleGuard + login redirect (M)
 
 ### Milestone 2 — User chat (client's primary ask)
-- [ ] [TASK-01-004](./TASK-01-004.md) — Chat-mode toggle end-to-end (M)
-- [ ] [TASK-01-005](./TASK-01-005.md) — Internal-mode chat gating end-to-end (M)
-- [ ] [TASK-01-006](./TASK-01-006.md) — User workspace + read-only KB access (M)
+- [x] [TASK-01-004](./TASK-01-004.md) — Chat-mode toggle end-to-end (M)
+- [x] [TASK-01-005](./TASK-01-005.md) — Internal-mode chat gating end-to-end (M)
+- [x] [TASK-01-006](./TASK-01-006.md) — User workspace + read-only KB access (M)
 
 ### Milestone 3 — Admin user management
 - [ ] [TASK-01-007](./TASK-01-007.md) — Users CRUD backend (M)
