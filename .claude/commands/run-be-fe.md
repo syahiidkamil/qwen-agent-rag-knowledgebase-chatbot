@@ -1,5 +1,6 @@
 run in the background using bash background
-<example> // replace it with your
-1. the BE @REPOS/xxx-be (by default XXXX PORT, use `bun run start:dev` because using nodemon it is hot reload)
-2. the FE @REPOS/xxx-fe (by default XXXX PORT, and `bun run dev` hot reload)
-</example>
+
+1. the BE @repos/fast-api-backend on port 3081 — `uvicorn app.main:app --reload --port 3081` (use `--reload` for hot reload on file change)
+2. the FE @repos/react-vite-frontend on port 5181 — `npm run dev` (Vite already gives hot reload; port is pinned in `vite.config.ts`)
+
+The FE reads `VITE_API_URL=http://localhost:3081` from `.env` to call the BE.
