@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>3 · Knowledge base (admin) — Phase 01 wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <a href="admin-shell.html">‹ Admin shell</a>
+    <a href="user-workspace.html">Next: User workspace ›</a>
+    <span class="spacer"></span>
+    <span class="crumb">3 / 7 · Modified</span>
+  </nav>
+  <main>
+    <h1>Knowledge base (admin view, with Rename)</h1>
+    <p class="purpose">Existing admin page. This phase adds a Rename action per row; nothing else changes structurally.</p>
+
+    <h2>Default state</h2>
+    <div class="screen">
+      <div class="screen-label">/admin/knowledge</div>
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <strong>Knowledge base</strong>
+        <span class="button primary">+ Upload file</span>
+      </div>
+      <div class="box" style="margin-top:12px;">
+        <table>
+          <thead>
+            <tr><th>Filename</th><th>Status</th><th>Chunks</th><th>Uploaded</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>qna-aira-next.pdf</td><td><span class="chip active">ingested</span></td><td>48</td><td>May 23</td><td class="actions">✏️ 🔄 🗑️</td></tr>
+            <tr><td>pricing-2026.pdf</td><td><span class="chip ingesting">ingesting</span></td><td>—</td><td>May 25</td><td class="actions">🔄</td></tr>
+            <tr><td>faq-broken.pdf</td><td><span class="chip failed">failed</span></td><td>—</td><td>May 24</td><td class="actions">🔄 🗑️</td></tr>
+            <tr><td>policies-v2.docx</td><td><span class="chip">uploaded</span></td><td>—</td><td>May 25</td><td class="actions">🔄</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--muted); font-size:12px;">✏️ = Rename (NEW)  ·  🔄 = Reingest (existing)  ·  🗑️ = Delete (existing — cascades to chunks)</p>
+    </div>
+
+    <h2>Rename dialog (NEW)</h2>
+    <div class="screen">
+      <div class="screen-label">overlay</div>
+      <div class="dialog">
+        <h3>Rename file</h3>
+        <label>Filename</label>
+        <div class="input">qna-aira-next.pdf</div>
+        <p style="color:var(--muted); font-size:12px;">Source-chip labels on future answers will use the new name. The underlying file in storage is not renamed.</p>
+        <div class="dialog-actions">
+          <span class="button">Cancel</span>
+          <span class="button primary">Save name</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>Other states</h2>
+    <details><summary>Loading list</summary><p>Row skeletons for ~3 rows while GET completes.</p></details>
+    <details><summary>Empty list</summary><p>"No documents yet. Upload your first file to get started." with upload CTA.</p></details>
+    <details><summary>Failed row</summary><p>Status reads "failed" with a tooltip on hover showing the <code>error_message</code>. Retry icon visible.</p></details>
+    <details><summary>Renaming row (optimistic)</summary><p>Row name updates immediately on save; on PATCH failure, revert and show toast.</p></details>
+    <details><summary>Rename validation error</summary><p>Inline error below the field: "Filename cannot be empty." Save disabled until valid.</p></details>
+
+    <h2>Interactions</h2>
+    <ul class="interactions">
+      <li><strong>[+ Upload file]</strong> → existing upload flow.</li>
+      <li><strong>✏️</strong> → open Rename dialog pre-filled with current filename.</li>
+      <li>Dialog <strong>[Save name]</strong> → <code>PATCH /api/documents/{id}</code> with <code>{filename: "..."}</code>; close dialog; row updates.</li>
+      <li>Dialog <strong>[Cancel]</strong> / ESC → close, no change.</li>
+      <li><strong>🔄</strong> and <strong>🗑️</strong> → existing flows, no change.</li>
+    </ul>
+
+    <h2>Notes</h2>
+    <ul class="interactions">
+      <li><code>user</code> role never sees this page (route guard).</li>
+      <li>Rename is admin and super_admin only (<code>require_role("admin")</code>).</li>
+      <li>Filename validation: 1–255 chars, no leading/trailing whitespace, no path separators.</li>
+      <li>NOT changing: storage object path, document ID, chunk content. Only the displayed label.</li>
+      <li>Source chips on already-rendered chat turns are NOT retroactively updated.</li>
+    </ul>
+  </main>
+</body>
+</html>

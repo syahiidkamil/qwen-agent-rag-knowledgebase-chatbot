@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>2 · Admin shell — Phase 01 wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <a href="login.html">‹ Login</a>
+    <a href="admin-knowledge-base.html">Next: KB (admin) ›</a>
+    <span class="spacer"></span>
+    <span class="crumb">2 / 7 · Modified</span>
+  </nav>
+  <main>
+    <h1>Admin shell (role-aware sidebar)</h1>
+    <p class="purpose">Container layout for every admin-side route. Sidebar items show or hide based on the signed-in user's role.</p>
+
+    <h2>super_admin view</h2>
+    <div class="screen">
+      <div class="screen-label">/admin/*</div>
+      <div class="shell">
+        <div class="sidebar">
+          <strong>Aira Admin</strong>
+          <div class="nav-item active">📁 Knowledge base</div>
+          <div class="nav-item">👥 Users</div>
+          <div class="nav-item">🎨 Landing config</div>
+          <div class="footer">
+            super.boss@airanext.id<br/>
+            <span class="chip role">super_admin</span><br/>
+            <span class="button">Sign out</span>
+          </div>
+        </div>
+        <div class="content">
+          <p style="color:var(--muted);">{Current page content renders here}</p>
+        </div>
+      </div>
+    </div>
+
+    <h2>admin view (no Landing item)</h2>
+    <div class="screen">
+      <div class="screen-label">/admin/* — role = admin</div>
+      <div class="shell">
+        <div class="sidebar">
+          <strong>Aira Admin</strong>
+          <div class="nav-item active">📁 Knowledge base</div>
+          <div class="nav-item">👥 Users</div>
+          <div class="nav-item hidden-for-role">(Landing config: super_admin only — hidden)</div>
+          <div class="footer">
+            admin@airanext.id<br/>
+            <span class="chip role">admin</span><br/>
+            <span class="button">Sign out</span>
+          </div>
+        </div>
+        <div class="content">
+          <p style="color:var(--muted);">{Current page content renders here}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>user role never reaches this shell.</strong> If a user navigates to <code>/admin/*</code> (typed URL, stale link, bookmark), the route guard redirects them to <code>/workspace</code>.
+    </div>
+
+    <h2>Other states</h2>
+    <details>
+      <summary>Loading</summary>
+      <p>Sidebar renders skeletons for the role chip while the session resolves; main panel shows a route-level spinner. ~200 ms ceiling.</p>
+    </details>
+    <details>
+      <summary>Mid-deactivation by another admin</summary>
+      <p>Next API call returns 401; FE clears the session and bounces to <code>/login</code> with a neutral "Your session has ended" inline message.</p>
+    </details>
+
+    <h2>Interactions</h2>
+    <ul class="interactions">
+      <li>Sidebar item click → react-router navigates; active item gets highlight.</li>
+      <li><strong>[Sign out]</strong> → <code>supabase.auth.signOut</code>; clears auth store; redirects to <code>/login</code>.</li>
+      <li>Role chip under email is display-only.</li>
+    </ul>
+
+    <h2>Notes</h2>
+    <ul class="interactions">
+      <li>Role gating in two places: sidebar render <em>and</em> route guard. Defense in depth.</li>
+      <li>"Aira Admin" wordmark is a future-design concern; current text is fine.</li>
+    </ul>
+  </main>
+</body>
+</html>

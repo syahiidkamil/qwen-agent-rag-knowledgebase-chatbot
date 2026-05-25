@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>7 · Public landing — Phase 01 wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <a href="landing-config.html">‹ Landing config</a>
+    <a href="index.html">Index »</a>
+    <span class="spacer"></span>
+    <span class="crumb">7 / 7 · Modified</span>
+  </nav>
+  <main>
+    <h1>Public landing — chat widget states</h1>
+    <p class="purpose">The existing marketing landing page. This phase adds a second state to its chat widget: when chat_mode = internal AND the visitor is not signed in, the widget shows a "Sign in to chat" gate instead of the chat form.</p>
+
+    <h2>State A — chat_mode = public (current behavior, unchanged)</h2>
+    <div class="screen">
+      <div class="screen-label">/ — anonymous visitor, public mode</div>
+      <h3>Engineers who ship in the real world</h3>
+      <p style="color:var(--muted);">Cohort-based AI engineering, in person + async</p>
+      <p><span class="button primary">Apply for cohort 14</span></p>
+      <div class="widget">
+        <div class="widget-header">Chat with Aira <span class="chip active" style="float:right;">GROUNDED</span></div>
+        <p style="color:var(--muted); font-size:13px;">Hi! I'm Aira — ask about programs, tuition, etc.</p>
+        <div class="input">Ask anything...</div>
+      </div>
+    </div>
+
+    <h2>State B — chat_mode = internal, anonymous visitor</h2>
+    <div class="screen">
+      <div class="screen-label">/ — anonymous visitor, internal mode</div>
+      <h3>Engineers who ship in the real world</h3>
+      <p style="color:var(--muted);">Cohort-based AI engineering, in person + async</p>
+      <p><span class="button primary">Apply for cohort 14</span></p>
+      <div class="widget gated">
+        <div class="widget-header">Chat with Aira</div>
+        <p style="font-size:24px;">🔒</p>
+        <p><strong>Internal use only.</strong></p>
+        <p style="color:var(--muted); font-size:13px;">Sign in to chat with Aira.</p>
+        <p><a class="button primary" href="login.html">Sign in</a></p>
+      </div>
+    </div>
+
+    <h2>State C — chat_mode = internal, visitor IS signed in (any role)</h2>
+    <div class="note">Same as State A. The widget renders normally because the visitor has a valid Bearer token. Logged-in users (super_admin / admin / user) can chat from the public landing page just as they can from /workspace.</div>
+
+    <h2>Other states</h2>
+    <details><summary>Loading landing_config</summary><p>Widget area shows a low-fi skeleton block until config + auth state both resolve. ~150 ms ceiling on warm cache.</p></details>
+    <details><summary>Mid-conversation flip to internal</summary><p>The in-flight stream completes; next user message attempt receives 401; the widget UI replaces itself with State B's "Sign in to chat" block above the conversation history. History stays visible but greyed; no future sends possible.</p></details>
+    <details><summary>API down</summary><p>"Chat unavailable right now" — same as today.</p></details>
+
+    <h2>Interactions</h2>
+    <ul class="interactions">
+      <li>State B <strong>[Sign in]</strong> → navigate to <code>/login</code>; role-based redirect kicks in after success.</li>
+      <li>State A: existing chat flow, no change.</li>
+      <li>Minimize / maximize toggles: existing behavior, no change.</li>
+    </ul>
+
+    <h2>Notes</h2>
+    <ul class="interactions">
+      <li>Landing page fetches <code>GET /api/landing-config</code> on mount and reads <code>config.chat_mode</code> (defaults to "public").</li>
+      <li>Backend chat endpoint independently enforces the gate: no Bearer + chat_mode internal → 401. FE check is UX-only; BE check is authoritative.</li>
+      <li>Single biggest visitor-facing change this phase (TC-01-006 covers it).</li>
+    </ul>
+  </main>
+</body>
+</html>

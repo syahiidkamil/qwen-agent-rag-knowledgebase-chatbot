@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>4 · User workspace — Phase 01 wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <a href="admin-knowledge-base.html">‹ KB (admin)</a>
+    <a href="users.html">Next: Users ›</a>
+    <span class="spacer"></span>
+    <span class="crumb">4 / 7 · New</span>
+  </nav>
+  <main>
+    <h1>User workspace · /workspace</h1>
+    <p class="purpose">New screen. Where the user role lands after sign-in. Read-only KB list + auto-opened wider chat panel. Audience is any internal teammate (CS, sales, support).</p>
+
+    <h2>Default state (chat auto-opened on the right)</h2>
+    <div class="screen">
+      <div class="screen-label">/workspace</div>
+      <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong>Aira</strong>
+        <span style="color:var(--muted); font-size:13px;">cs.dewi@airanext.id ▾</span>
+      </div>
+      <div class="workspace-layout">
+        <div class="docs">
+          <h4>Knowledge base (read-only)</h4>
+          <table>
+            <thead>
+              <tr><th>Filename</th><th>Updated</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>qna-aira-next.pdf</td><td>May 23</td></tr>
+              <tr><td>pricing-2026.pdf</td><td>May 25</td></tr>
+              <tr><td>policies-v2.docx</td><td>May 25</td></tr>
+              <tr><td>schedule-fall-2026.pdf</td><td>May 25</td></tr>
+              <tr><td>partners.pdf</td><td>May 25</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="widget docked">
+          <div class="widget-header">Aira · GROUNDED · 4 sources <span style="float:right; color:var(--muted); font-size:12px;">⌄ minimize</span></div>
+          <p style="color:var(--muted); font-size:13px;">Hi! I'm Aira. Ask about programs, tuition, scholarships, hiring outcomes.</p>
+          <div class="input" style="margin-top:12px;">Ask anything...</div>
+          <div style="text-align:right; margin-top:6px;">▶</div>
+        </div>
+      </div>
+    </div>
+
+    <h2>Chat minimized to bubble</h2>
+    <div class="screen">
+      <div class="screen-label">/workspace · chat minimized</div>
+      <div class="docs" style="background:var(--inner-bg); border:1px dashed var(--border); padding:12px;">
+        <h4>Knowledge base (read-only)</h4>
+        <p style="color:var(--muted); font-size:13px;">(list fills the full width)</p>
+      </div>
+      <div style="text-align:right; margin-top:8px;">
+        <span class="button">💬 (bubble — click to re-open)</span>
+      </div>
+    </div>
+
+    <h2>Other states</h2>
+    <details><summary>Loading documents</summary><p>Row skeletons in the left list; chat panel renders normally and is usable while the list loads.</p></details>
+    <details><summary>Empty knowledge base</summary><p>"No documents yet — your admin is still curating the corpus." No upload CTA (user can't upload). Chat panel still works.</p></details>
+
+    <h2>Interactions</h2>
+    <ul class="interactions">
+      <li>Row click → no-op for this phase.</li>
+      <li><strong>[▾]</strong> user menu (top-right) → Sign out.</li>
+      <li>Chat <strong>⌄</strong> chevron → minimize to bubble.</li>
+      <li>Chat bubble click → expand back to side panel.</li>
+      <li>Typing in chat input + Enter → standard chat submit.</li>
+    </ul>
+
+    <h2>Notes</h2>
+    <ul class="interactions">
+      <li>New route <code>/workspace</code>, gated by <code>RoleGuard("user", "admin", "super_admin")</code>. Any logged-in role can view their own workspace.</li>
+      <li>Document list from <code>GET /api/documents</code> — same endpoint admins use; backend must permit any authenticated role to read it.</li>
+      <li>Fields exposed to user: filename, updated_at. Hide chunk_count, error_message, storage_path.</li>
+      <li>Rename / delete / reingest / upload icons are absent in this view.</li>
+      <li>Open/minimized preference persisted in localStorage (<code>workspace_chat_open</code>); default open.</li>
+    </ul>
+  </main>
+</body>
+</html>

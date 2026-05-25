@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>5 · Users — Phase 01 wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <a href="user-workspace.html">‹ User workspace</a>
+    <a href="landing-config.html">Next: Landing config ›</a>
+    <span class="spacer"></span>
+    <span class="crumb">5 / 7 · New</span>
+  </nav>
+  <main>
+    <h1>Users</h1>
+    <p class="purpose">New page. Admin and super_admin manage the internal team's accounts: list, create, deactivate, reactivate. No password reset, no email invitation.</p>
+
+    <h2>Default state</h2>
+    <div class="screen">
+      <div class="screen-label">/admin/users</div>
+      <div class="row" style="justify-content:space-between; align-items:center;">
+        <strong>Users</strong>
+        <span class="button primary">+ Add user</span>
+      </div>
+      <div class="box" style="margin-top:12px;">
+        <table>
+          <thead>
+            <tr><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>super.boss@airanext.id</td><td><span class="chip role">super_admin</span></td><td><span class="chip active">active</span></td><td class="actions">—</td></tr>
+            <tr><td>syahiid@airanext.id</td><td><span class="chip role">admin</span></td><td><span class="chip active">active</span></td><td class="actions"><span class="button">Deactivate</span></td></tr>
+            <tr><td>cs.dewi@airanext.id</td><td><span class="chip role">user</span></td><td><span class="chip active">active</span></td><td class="actions"><span class="button">Deactivate</span></td></tr>
+            <tr><td>cs.budi@airanext.id</td><td><span class="chip role">user</span></td><td><span class="chip deactivated">deactivated</span></td><td class="actions"><span class="button">Reactivate</span></td></tr>
+            <tr><td>sales.andi@airanext.id</td><td><span class="chip role">user</span></td><td><span class="chip active">active</span></td><td class="actions"><span class="button">Deactivate</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="color:var(--muted); font-size:12px;">↑ Own super_admin row: no Deactivate button (self-deactivation prevented at UI).</p>
+    </div>
+
+    <h2>Add user dialog</h2>
+    <div class="screen">
+      <div class="screen-label">overlay</div>
+      <div class="dialog">
+        <h3>Add user</h3>
+        <div class="col">
+          <label>Email</label>
+          <div class="input">cs.newhire@airanext.id</div>
+          <label>Password <span style="color:var(--muted); font-size:12px;">(8+ characters)</span></label>
+          <div class="input">••••••••••&nbsp;&nbsp;&nbsp;&nbsp;👁  📋</div>
+          <label style="margin-top:8px;">Role</label>
+          <div><input type="radio" checked /> user &nbsp; <span style="color:var(--muted); font-size:12px;">Sales, CS, support, etc.</span></div>
+          <div><input type="radio" /> admin &nbsp; <span style="color:var(--muted); font-size:12px;">Manage KB + users</span></div>
+          <div><input type="radio" /> super_admin &nbsp; <span style="color:var(--muted); font-size:12px;">Also edits brand & mode</span></div>
+        </div>
+        <div class="dialog-actions">
+          <span class="button">Cancel</span>
+          <span class="button primary">Create user</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>Post-create confirmation</h2>
+    <div class="screen">
+      <div class="screen-label">overlay (replaces Add user dialog)</div>
+      <div class="dialog">
+        <h3>✓ cs.newhire@airanext.id created</h3>
+        <div class="warn">Share these credentials with them now — this is your only chance to copy the password.</div>
+        <label>Password</label>
+        <div class="input">•••••••••&nbsp;&nbsp;&nbsp;&nbsp;📋</div>
+        <div class="dialog-actions">
+          <span class="button primary">Done</span>
+        </div>
+      </div>
+    </div>
+
+    <h2>Other states</h2>
+    <details><summary>Loading list</summary><p>Skeleton rows.</p></details>
+    <details><summary>Empty list</summary><p>"No users yet. Run the seed script or add one above."</p></details>
+    <details><summary>Email already exists</summary><p>Server returns 409. Inline error: "This email is already registered. Use Reactivate if the account is deactivated."</p></details>
+    <details><summary>Password too short</summary><p>Inline error: "Password must be at least 8 characters." Create disabled until valid.</p></details>
+
+    <h2>Interactions</h2>
+    <ul class="interactions">
+      <li><strong>[+ Add user]</strong> → open dialog.</li>
+      <li><strong>[Create user]</strong> → <code>POST /api/users</code> with {email, password, role}. On 200: dialog swaps to post-create. On 4xx: inline error.</li>
+      <li><strong>[Deactivate]</strong> → <code>PATCH /api/users/{id}/deactivate</code>. No confirmation (reversible).</li>
+      <li><strong>[Reactivate]</strong> → <code>PATCH /api/users/{id}/reactivate</code>.</li>
+      <li>Email non-editable after creation.</li>
+    </ul>
+
+    <h2>Notes</h2>
+    <ul class="interactions">
+      <li>Admin AND super_admin can both create users of any role.</li>
+      <li>"Deactivate" = Supabase Auth <code>banned_until</code> set far in the future. "Reactivate" clears it.</li>
+      <li>Already-issued JWTs stay valid until expiry (~1h); documented accepted limitation.</li>
+      <li>No pagination this phase — list expected < 50 users.</li>
+      <li>All actions require <code>require_role("admin")</code> on the backend (admin + super_admin pass).</li>
+    </ul>
+  </main>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Phase 01: roles-refactor — Wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <span class="spacer"></span>
+    <span class="crumb">Phase 01 · roles-refactor · wireframes</span>
+  </nav>
+  <main>
+    <h1>Phase 01: roles-refactor</h1>
+    <p class="purpose">Low-fidelity wireframes for every user-facing surface this phase touches. Click a card to view that screen's structure, states, and notes.</p>
+
+    <h2>Screens</h2>
+    <div class="cards">
+      <a class="card" href="login.html">
+        <span class="card-meta">1 · Modified</span>
+        <span class="card-title">Login</span>
+        <span class="card-desc">Single sign-in for every role. Role-based redirect after success.</span>
+      </a>
+      <a class="card" href="admin-shell.html">
+        <span class="card-meta">2 · Modified</span>
+        <span class="card-title">Admin shell</span>
+        <span class="card-desc">Sidebar visibility per role. super_admin sees Landing; admin doesn't; user is redirected.</span>
+      </a>
+      <a class="card" href="admin-knowledge-base.html">
+        <span class="card-meta">3 · Modified</span>
+        <span class="card-title">Knowledge base (admin)</span>
+        <span class="card-desc">Existing page + new Rename action and dialog.</span>
+      </a>
+      <a class="card" href="user-workspace.html">
+        <span class="card-meta">4 · New</span>
+        <span class="card-title">User workspace · /workspace</span>
+        <span class="card-desc">Read-only KB list + auto-opened wider chat panel. Minimizable.</span>
+      </a>
+      <a class="card" href="users.html">
+        <span class="card-meta">5 · New</span>
+        <span class="card-title">Users</span>
+        <span class="card-desc">List, create, deactivate. No password reset, no email invitation.</span>
+      </a>
+      <a class="card" href="landing-config.html">
+        <span class="card-meta">6 · Modified</span>
+        <span class="card-title">Landing config (super_admin only)</span>
+        <span class="card-desc">Chat-mode toggle + brand presets. One save covers both.</span>
+      </a>
+      <a class="card" href="public-landing-widget.html">
+        <span class="card-meta">7 · Modified</span>
+        <span class="card-title">Public landing — chat widget states</span>
+        <span class="card-desc">Public-mode chat or "Sign in to chat" gate when internal-mode + anonymous.</span>
+      </a>
+    </div>
+
+    <div class="note">
+      <strong>Reading order suggestion:</strong> Login → Admin shell → Knowledge base (admin) → Users → Landing config → Public landing widget → User workspace. That order roughly follows the implementation roadmap (auth/role infra first, super-admin controls next, end-user surface last).
+    </div>
+
+    <div class="warn">
+      <strong>These are wireframes, not designs.</strong> Dashed borders, system fonts, no color theming — the point is structure. Implementation can deviate visually as long as the structure, state coverage, and interaction model match.
+    </div>
+  </main>
+</body>
+</html>

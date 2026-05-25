@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>1 · Login — Phase 01 wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <a href="index.html">‹ Index</a>
+    <a href="admin-shell.html">Next: Admin shell ›</a>
+    <span class="spacer"></span>
+    <span class="crumb">1 / 7 · Modified</span>
+  </nav>
+  <main>
+    <h1>Login</h1>
+    <p class="purpose">Single sign-in surface for every role. After successful authentication, redirect by role.</p>
+
+    <h2>Default state</h2>
+    <div class="screen">
+      <div class="screen-label">/login</div>
+      <div class="dialog">
+        <h3 style="text-align:center;">Aira · Sign in</h3>
+        <div class="col">
+          <label>Email</label>
+          <div class="input">you@yourcompany.id</div>
+          <label>Password</label>
+          <div class="input">••••••••••</div>
+        </div>
+        <div class="dialog-actions" style="justify-content:center;">
+          <span class="button primary">Sign in</span>
+        </div>
+        <p style="text-align:center; color:var(--muted); font-size:12px; margin:8px 0 0 0;">No "forgot password" — out of scope this phase.</p>
+      </div>
+    </div>
+
+    <h2>Other states</h2>
+
+    <details>
+      <summary>Submitting</summary>
+      <p>Button shows spinner. Inputs disabled. Same layout, no popover.</p>
+    </details>
+
+    <details>
+      <summary>Auth failed</summary>
+      <p>Red inline error below the password field: <em>"Wrong email or password."</em> No toast, no modal.</p>
+    </details>
+
+    <details>
+      <summary>Account deactivated</summary>
+      <p>Same inline error position: <em>"This account is inactive. Contact your administrator."</em> Sourced from a specific Supabase error code, not a guess.</p>
+    </details>
+
+    <details>
+      <summary>Account misconfigured (post-sign-in, role missing/unknown)</summary>
+      <p>Inline error appears AFTER a redirect attempt fails: <em>"This account needs setup. Contact your administrator."</em> The session is cleared automatically.</p>
+    </details>
+
+    <h2>Interactions</h2>
+    <ul class="interactions">
+      <li><strong>[Sign in]</strong> → <code>supabase.auth.signInWithPassword</code>. Then redirect by role:
+        <ul>
+          <li><code>super_admin</code> / <code>admin</code> → <code>/admin</code> (lands on Knowledge base by default)</li>
+          <li><code>user</code> → <code>/workspace</code></li>
+          <li>missing / unknown role → sign out, render "Account misconfigured" inline</li>
+        </ul>
+      </li>
+      <li>Pressing Enter in either field submits.</li>
+      <li>Email field auto-focuses on page mount.</li>
+    </ul>
+
+    <h2>Notes</h2>
+    <ul class="interactions">
+      <li>Reuses existing login page DOM; behavior changes are purely in the post-sign-in branch.</li>
+      <li>No "forgot password", no "create account", no third-party SSO.</li>
+      <li>FE reads the role from the verified JWT for routing; backend re-verifies on every API call.</li>
+    </ul>
+  </main>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>6 · Landing config — Phase 01 wireframes</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <nav class="topnav">
+    <a href="index.html">⌂ Home</a>
+    <a href="users.html">‹ Users</a>
+    <a href="public-landing-widget.html">Next: Public widget ›</a>
+    <span class="spacer"></span>
+    <span class="crumb">6 / 7 · Modified</span>
+  </nav>
+  <main>
+    <h1>Landing config (super_admin only)</h1>
+    <p class="purpose">Modified page (super_admin gate added; chat-mode toggle added). Single place to control what the public landing page looks like and whether the chat widget is publicly usable.</p>
+
+    <h2>Default state</h2>
+    <div class="screen">
+      <div class="screen-label">/admin/landing-config — super_admin only</div>
+
+      <strong>Landing config</strong>
+
+      <div class="box">
+        <div class="box-title">Chat mode</div>
+        <p style="margin:0 0 8px 0; color:var(--muted); font-size:13px;">Who can use the chat widget on the landing page?</p>
+        <div><input type="radio" checked /> Public &nbsp; <span style="color:var(--muted); font-size:12px;">Anyone visiting the page</span></div>
+        <div><input type="radio" /> Internal &nbsp; <span style="color:var(--muted); font-size:12px;">Only signed-in users (CS, sales, etc.)</span></div>
+        <p style="text-align:right; color:var(--muted); font-size:12px; margin:8px 0 0 0;">Currently: <span class="chip active">Public</span></p>
+      </div>
+
+      <div class="box">
+        <div class="box-title">Brand presets</div>
+        <div class="col">
+          <label>Hero headline</label>
+          <div class="input">Engineers who ship in the real world</div>
+          <label>Subheadline</label>
+          <div class="input">Cohort-based AI engineering, in person + async</div>
+          <label>Primary CTA label</label>
+          <div class="input">Apply for cohort 14</div>
+          <p style="color:var(--muted); font-size:12px;">... {other existing brand preset fields the page already has} ...</p>
+        </div>
+      </div>
+
+      <div style="text-align:right; margin-top:12px;">
+        <span class="button primary">Save changes</span>
+      </div>
+    </div>
+
+    <h2>Other states</h2>
+    <details><summary>Loading config</summary><p>Form skeleton; [Save changes] disabled.</p></details>
+    <details><summary>Saving</summary><p>Button shows spinner; inputs disabled.</p></details>
+    <details><summary>Save error</summary><p>Toast: "Couldn't save. Try again or refresh." No optimistic update; form stays dirty.</p></details>
+    <details><summary>Save success</summary><p>Toast: "Saved." Form clears dirty state.</p></details>
+    <details><summary>Chat-mode change pending save</summary><p>The "Currently: ..." chip shows a dashed border + unsaved mode label until save lands.</p></details>
+    <details><summary>Admin (non-super) attempts access</summary><p>Route redirects to <code>/admin/knowledge</code> (or shows a 403 view); sidebar item is hidden anyway.</p></details>
+
+    <h2>Interactions</h2>
+    <ul class="interactions">
+      <li>Chat-mode radio → toggles selection only. Does NOT save until [Save changes] clicked.</li>
+      <li><strong>[Save changes]</strong> → <code>PUT /api/landing-config</code> with full config blob. Toast + reset dirty on success.</li>
+      <li>Brand preset fields → free text inputs. Existing field set; no add/remove in this phase.</li>
+    </ul>
+
+    <h2>Notes</h2>
+    <ul class="interactions">
+      <li>Both Chat mode AND brand presets live in <code>landing_config.config</code> JSONB. One save covers both.</li>
+      <li><code>chat_mode</code> value: <code>"public"</code> | <code>"internal"</code>. Default <code>"public"</code> if absent.</li>
+      <li>Backend gate: <code>require_role("super_admin")</code> on <code>PUT /api/landing-config</code>.</li>
+      <li><code>GET /api/landing-config</code> stays publicly readable — the landing page fetches it anonymously.</li>
+    </ul>
+  </main>
+</body>
+</html>
