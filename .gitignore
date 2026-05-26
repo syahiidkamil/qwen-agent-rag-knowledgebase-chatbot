@@ -2,4 +2,5 @@
 misc/screenshots/*
 !misc/screenshots/.gitkeep
 misc/browser-storage
+misc/credentials/
 .playwright-mcp
