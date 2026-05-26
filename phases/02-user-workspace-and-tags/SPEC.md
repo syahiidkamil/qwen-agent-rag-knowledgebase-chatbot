@@ -59,6 +59,15 @@ Sidebar collapse applies to both the admin and workspace shells; state persists 
 
 **FE (deleted):** `src/features/workspace/WorkspacePage.tsx` · `src/features/admin/knowledge/RenameDialog.tsx`
 
+## Test cases
+
+- [TC-02-001](test-cases/TC-02-001.md) — User browses the KB and filters by tag (OR, exact, case-folded)
+- [TC-02-002](test-cases/TC-02-002.md) — Admin tags a document via the Edit document dialog
+- [TC-02-003](test-cases/TC-02-003.md) — Invalid tag inputs surface inline without dismissing the dialog
+- [TC-02-004](test-cases/TC-02-004.md) — Sidebar collapse persists across reloads and both shells
+
+[TC-01-003](../01-roles-refactor/test-cases/TC-01-003.md) was also updated in this phase to reflect the Rename action → Edit document dialog rename; the filename-rename happy path remains valid.
+
 ## Test-run record
 
 See [`test-runs/2026-05-25-exit.md`](test-runs/2026-05-25-exit.md).
