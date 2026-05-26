@@ -73,7 +73,30 @@ flowchart LR
 - `documents` — file metadata, `status enum (uploaded, ingesting, ingested, failed)`, `chunk_count`, `error_message`.
 - `chunks` — `content`, `embedding Vector(1024)`, and `tsv tsvector` GENERATED ALWAYS AS `to_tsvector('english', content)` STORED. Indexes: ivfflat on `embedding` (cosine ops, 100 lists) + GIN on `tsv`.
 - `chat_sessions`, `chat_messages` — full transcript persistence, including `sources JSONB` per assistant turn so we can render source chips on history reload.
-- `landing_config` — single-row JSONB blob backing the marketing landing page CMS.
+- `landing_config` — single-row JSONB blob backing the marketing landing page CMS. The blob also stores `chat_mode` (`"public"` | `"internal"`); the chat endpoint reads this on every request and gates anonymous callers when it is `"internal"`.
+
+## Roles and authorization
+
+Three roles live in Supabase Auth's `user_metadata.role`: `super_admin` > `admin` > `user`.
+
+- The backend verifies every JWT against Supabase's JWKS (ES256) and reads `user_metadata.role` from the verified claims (`app/core/auth.py`).
+- `require_role(*roles)` is the single authorization dependency every protected endpoint uses; higher roles transitively pass lower-role checks (privilege hierarchy expansion).
+- `get_current_user_optional` returns `AuthUser | None` for endpoints that legitimately accept anonymous callers — the chat endpoint uses it so it can refuse anonymous callers only when `landing_config.chat_mode == "internal"`.
+
+Surface-level matrix:
+
+| Surface | Anonymous | user | admin | super_admin |
+|---|---|---|---|---|
+| Public landing page | ✓ | ✓ | ✓ | ✓ |
+| Chat widget (public mode) | ✓ | ✓ | ✓ | ✓ |
+| Chat widget (internal mode) | 401 → sign-in gate | ✓ | ✓ | ✓ |
+| `/workspace` (read-only KB + wider chat) |  | ✓ | ✓ | ✓ |
+| `GET /api/documents` |  | ✓ | ✓ | ✓ |
+| `/admin/knowledge` + upload / ingest / delete / rename |  |  | ✓ | ✓ |
+| `/admin/users` + Users CRUD |  |  | ✓ | ✓ |
+| `/admin/cms` + landing CMS save + chat-mode toggle |  |  |  | ✓ |
+
+A signed-in user with a missing or unknown role is treated as misconfigured — the backend returns 403 and the FE `RoleGuard` signs them out with `/login?error=missing_role`.
 
 ## Where to read next
 
