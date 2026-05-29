@@ -100,6 +100,7 @@ A signed-in user with a missing or unknown role is treated as misconfigured — 
 
 ## Where to read next
 
+- **[tech-stack.md](tech-stack.md)** — one-page tech overview: every technology used (frontend, backend, DB, AI models), and how RRF, ingestion, and chat fit together. Start here for the "what's it built with?" answer.
 - **[rag-overview.md](rag-overview.md)** — high-level RAG mental model: one diagram covering write side (upload → embed → vector table) and read side (query → hybrid retrieval → Qwen). Answers FAQs about text-only embeddings, RRF vs BM25, query rewriting, etc.
 - **[chat-pipeline.md](chat-pipeline.md)** — the chat request lifecycle, file/line walkthrough, and the latency budget. Start here if the chat feels slow.
 - **[ingestion-pipeline.md](ingestion-pipeline.md)** — upload → parse → embed → chunk insert. Start here if a document is stuck on `ingesting` or comes back `failed`.
