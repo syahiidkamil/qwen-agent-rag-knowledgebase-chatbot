@@ -5,3 +5,6 @@ misc/browser-storage
 misc/credentials/
 misc/presets/
 .playwright-mcp
+# Python caches
+__pycache__/
+*.py[cod]
