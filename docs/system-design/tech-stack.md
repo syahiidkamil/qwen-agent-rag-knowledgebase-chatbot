@@ -6,7 +6,7 @@ A high-level look at the system: the stack, the RAG pipeline, and how a question
 
 ## What it is
 
-A grounded chatbot that answers only from a corpus an admin curates. It runs in one of two modes — **public** (anonymous visitors, e.g. a marketing landing page) or **internal** (sign-in required) — and signed-in users get saved, per-user chat history. Retrieval is hybrid (semantic + keyword) fused with Reciprocal Rank Fusion, an admin can gate results by a relevance floor, and generation streams from Qwen over Server-Sent Events. If the answer isn't in the corpus, the model is instructed to say so rather than fall back on its general training.
+A grounded chatbot that answers only from a corpus an admin curates. It runs in one of two modes — **public** (anonymous visitors, e.g. a marketing landing page) or **internal** (sign-in required) — and signed-in users get saved, per-user chat history. Retrieval is hybrid (semantic + keyword) fused with Reciprocal Rank Fusion, an admin can gate results by a relevance floor, and generation streams over Server-Sent Events. Generation runs on **qwen3-vl-plus**, a vision-language model: it's shown the retrieved chunks' source *page images*, so it can read tables, charts, and scans — not just extracted text. Image and scanned-PDF uploads are OCR'd into the same text index at ingest, so they're searchable like any other document. If the answer isn't in the corpus, the model is instructed to say so rather than fall back on its general training.
 
 ## Stack
 
@@ -15,9 +15,10 @@ A grounded chatbot that answers only from a corpus an admin curates. It runs in 
 | **Frontend** | React 19 + Vite + TypeScript, Tailwind v4, shadcn/ui, React Router v7, Zustand, React Hook Form + Zod, Axios |
 | **Backend** | FastAPI + Uvicorn (Python 3.12), async SQLAlchemy + asyncpg, Pydantic v2, Alembic |
 | **Database** | Postgres + pgvector + native Full-Text Search (Supabase) |
-| **Storage** | Supabase Storage (original uploaded files) |
+| **Storage** | Supabase Storage (original uploaded files + rendered per-page images) |
 | **Auth** | Supabase Auth, ES256 JWT verified via JWKS; role hierarchy `super_admin > admin > user`. Admin APIs require a Bearer token; chat is open in public mode, token-gated in internal mode |
-| **AI models** | `qwen-plus-latest` for chat, `text-embedding-v3` (1024-dim) for embeddings, both via DashScope International |
+| **AI models** | `qwen3-vl-plus` (vision-language) for chat generation **and** for OCR of image/scanned docs; `text-embedding-v3` (1024-dim) for embeddings. All via DashScope International |
+| **Doc rendering** | `pypdfium2` (PDF pages → PNG, no system deps) + Pillow |
 | **Deploy** | Frontend on Vercel, backend on Railway, data layer on Supabase (ap-southeast-1) |
 
 ## Architecture
@@ -41,7 +42,7 @@ flowchart LR
 
   subgraph AI[DashScope International]
     EMB[text-embedding-v3]
-    LLM[qwen-plus-latest]
+    LLM[qwen3-vl-plus<br/>vision-language]
   end
 
   Widget -- POST /api/chat, SSE --> BE
@@ -51,7 +52,8 @@ flowchart LR
   BE -- file upload/download --> ST
   BE -- JWKS verify --> AUTH
   BE -- embeddings --> EMB
-  BE -- chat completions, stream --> LLM
+  BE -- chat (stream) + page-image OCR --> LLM
+  ST -. page-image URLs .-> LLM
 ```
 
 ## RAG pipeline
@@ -62,9 +64,13 @@ Two sides: a write side that builds the searchable index, and a read side that a
 flowchart LR
   subgraph WRITE[Write — build the index]
     direction TB
-    DOC([Document]) --> CHUNK[Split into chunks]
+    DOC([Document]) --> CHUNK[Split into chunks<br/>tagged with page no.]
     CHUNK --> EMB1[Embed chunks<br/>text-embedding-v3]
     EMB1 --> STORE[(Postgres chunks<br/>vector index + lexical index)]
+    DOC --> RENDER[Render each page<br/>to an image]
+    RENDER --> IMGS[(Storage<br/>page images)]
+    RENDER -. scanned / image-only pages .-> OCR[qwen3-vl-plus<br/>OCR → text]
+    OCR --> EMB1
   end
 
   subgraph READ[Read — answer a question]
@@ -75,22 +81,25 @@ flowchart LR
     VEC --> FUSE[Reciprocal Rank Fusion]
     LEX --> FUSE
     FUSE --> GATE[Relevance gate +<br/>distinct-file cap]
-    GATE --> CTX[Top chunks → system prompt]
-    CTX --> LLM[(qwen-plus-latest<br/>grounded, streamed)]
+    GATE --> CTX[Top chunks → system prompt<br/>+ their source page images]
+    CTX --> LLM[(qwen3-vl-plus<br/>grounded, streamed)]
     LLM --> ANS([Answer + sources])
   end
 
   STORE -. queried by .-> VEC
   STORE -. queried by .-> LEX
+  IMGS -. attached to .-> CTX
 ```
 
 ### Ingestion (write side)
 
-An admin uploads a file (PDF, DOCX, PPTX, XLSX, TXT, HTML). We store the original, parse it into chunks of roughly a few paragraphs each (small chunks keep retrieval sharp), embed every chunk with `text-embedding-v3`, and write the text plus its 1024-dim vector into Postgres. Each chunk also gets a lexical index entry for keyword search. Parsing is text-only; images in PDFs are dropped. The whole thing runs as a background job, and each file carries a status (uploaded, ingesting, ingested, failed) so the admin can retry anything that fails.
+An admin uploads a file (PDF, DOCX, PPTX, XLSX, TXT, HTML, or an image). We store the original, parse it into chunks of roughly a few paragraphs each (small chunks keep retrieval sharp), embed every chunk with `text-embedding-v3`, and write the text plus its 1024-dim vector into Postgres. Each chunk also gets a lexical index entry for keyword search, and is tagged with the source page it came from.
+
+For PDFs we additionally render **each page to an image** and keep it in Storage — these are what the model reads at answer time. Image uploads and scanned (low-text) PDF pages are transcribed by **qwen3-vl-plus** into text, which then embeds and becomes searchable like any other chunk. So visual documents become first-class members of the corpus while **retrieval stays entirely on text vectors** — no second visual index. The whole thing runs as a background job, and each file carries a status (uploaded, ingesting, ingested, failed) so the admin can retry anything that fails.
 
 ### Chat (read side)
 
-The visitor's question is embedded as-is (no query rewriting), then run against both indexes. The top chunks go into the system prompt with a grounding instruction, and `qwen-plus-latest` streams the answer back token by token over SSE. The cited documents are surfaced alongside the answer as clickable sources.
+The visitor's question is embedded as-is (no query rewriting), then run against both indexes. The top chunks go into the system prompt with a grounding instruction, and their source **page images** are attached to **qwen3-vl-plus**, which streams the answer back token by token over SSE — so it can read tables, charts, and scans in the original pages, not just the extracted text. The cited documents are surfaced alongside the answer as clickable sources. An admin knob caps how many page images are attached per answer (and `0` turns vision off, falling back to pure text RAG).
 
 ## Hybrid retrieval and RRF
 
@@ -132,6 +141,7 @@ A built-in **Debug Mode** (admin-only) shows both numbers on each source chip �
 | BM25 | Postgres `ts_rank` is good enough and built in |
 | Query rewriting / HyDE / multi-query | Costs an extra LLM round-trip per turn |
 | History-aware query rewriting | The most likely next addition; fixes context-losing follow-ups |
-| Multimodal embeddings | All corpora are text-extractable today |
+| Visual/multimodal embeddings (ColPali, CLIP) | We retrieve on text embeddings and add vision at *generation* time instead — qwen3-vl-plus reads the page images. Cheaper, and it reuses the hybrid retrieval we already have |
+| Page images for office docs (DOCX, PPTX) | The renderer handles PDFs and images; office files stay text-only for now (a future pass could convert them to PDF) |
 
 These are easy to add later if usage or quality needs justify them. Building them now would mean paying for scale we don't have yet.

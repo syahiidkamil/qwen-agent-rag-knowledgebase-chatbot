@@ -4,7 +4,7 @@ The high-level build of the system, kept simple.
 
 ## What it is
 
-An internal assistant. Staff sign in and ask questions over a private knowledge base, and it answers **only** from documents an admin uploaded — with sources, or an honest *"I don't know."*
+An internal assistant. Staff sign in and ask questions over a private knowledge base, and it answers **only** from what an admin uploaded — documents, and now images and scans too — with sources, or an honest *"I don't know."*
 
 ## What it's built with
 
@@ -15,7 +15,7 @@ An internal assistant. Staff sign in and ask questions over a private knowledge 
 | **Database** | Postgres + pgvector | stores the documents and their searchable form |
 | **File storage** | Supabase Storage | keeps the original uploaded files |
 | **Sign-in** | Supabase Auth | who you are, and what you're allowed to do |
-| **AI** | Qwen (via DashScope) | turns text into searchable vectors + writes the answers |
+| **AI** | Qwen (via DashScope) | turns text into searchable vectors, *reads* document pages & images, and writes the answers |
 
 ## How it fits together
 
@@ -25,7 +25,8 @@ Two paths share one knowledge base — one fills it, one reads it.
 flowchart LR
   subgraph ING[Ingestion — adding knowledge]
     direction TB
-    DOC[Admin uploads<br/>documents] --> EMB[Split into chunks<br/>+ embed as vectors]
+    DOC[Admin uploads<br/>documents & images] --> EMB[Split into chunks<br/>+ embed as vectors]
+    DOC --> PAGES[Keep a picture<br/>of each page]
     EMB --> DB[(Postgres<br/>documents + vectors)]
   end
 
@@ -33,18 +34,19 @@ flowchart LR
     direction TB
     Q[Staff signs in<br/>and asks] --> API[API — the brain]
     API --> FIND[Search for the most<br/>relevant passages]
-    FIND --> GEN[Qwen AI writes<br/>a grounded answer]
+    FIND --> GEN[Qwen AI reads those pages<br/>+ writes a grounded answer]
     GEN --> ANS[Answer + sources]
   end
 
   DB -. searched by .-> FIND
+  PAGES -. shown to .-> GEN
 ```
 
 ## A question, end to end
 
 1. You sign in and ask.
 2. The API finds the most relevant passages in the knowledge base.
-3. It hands those passages to the AI with one rule: answer only from these.
+3. It hands those passages — and pictures of the pages they came from — to the AI with one rule: answer only from these.
 4. The answer streams back with its sources — or *"that's not in the knowledge base."*
 
 ## Who's who
