@@ -58,5 +58,8 @@
   },
   "enabledMcpjsonServers": [
     "playwright"
-  ]
+  ],
+  "worktree": {
+    "bgIsolation": "none"
+  }
 }
