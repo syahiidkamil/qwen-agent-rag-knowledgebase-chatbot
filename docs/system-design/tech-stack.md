@@ -2,9 +2,11 @@
 
 A high-level look at the system: the stack, the RAG pipeline, and how a question becomes a grounded answer.
 
+> Want the 60-second, non-technical version first? See [overview.md](./overview.md).
+
 ## What it is
 
-A grounded chatbot for marketing landing pages. Anonymous visitors ask questions and the assistant answers only from a corpus an admin curates. Retrieval is hybrid (semantic + keyword) fused with Reciprocal Rank Fusion, and generation streams from Qwen over Server-Sent Events. If the answer isn't in the corpus, the model is instructed to say so rather than fall back on its general training.
+A grounded chatbot that answers only from a corpus an admin curates. It runs in one of two modes — **public** (anonymous visitors, e.g. a marketing landing page) or **internal** (sign-in required) — and signed-in users get saved, per-user chat history. Retrieval is hybrid (semantic + keyword) fused with Reciprocal Rank Fusion, an admin can gate results by a relevance floor, and generation streams from Qwen over Server-Sent Events. If the answer isn't in the corpus, the model is instructed to say so rather than fall back on its general training.
 
 ## Stack
 
@@ -14,7 +16,7 @@ A grounded chatbot for marketing landing pages. Anonymous visitors ask questions
 | **Backend** | FastAPI + Uvicorn (Python 3.12), async SQLAlchemy + asyncpg, Pydantic v2, Alembic |
 | **Database** | Postgres + pgvector + native Full-Text Search (Supabase) |
 | **Storage** | Supabase Storage (original uploaded files) |
-| **Auth** | Supabase Auth, ES256 JWT verified via JWKS (admin only; chat is anonymous) |
+| **Auth** | Supabase Auth, ES256 JWT verified via JWKS; role hierarchy `super_admin > admin > user`. Admin APIs require a Bearer token; chat is open in public mode, token-gated in internal mode |
 | **AI models** | `qwen-plus-latest` for chat, `text-embedding-v3` (1024-dim) for embeddings, both via DashScope International |
 | **Deploy** | Frontend on Vercel, backend on Railway, data layer on Supabase (ap-southeast-1) |
 
@@ -72,7 +74,8 @@ flowchart LR
     Q --> LEX[Lexical search]
     VEC --> FUSE[Reciprocal Rank Fusion]
     LEX --> FUSE
-    FUSE --> CTX[Top chunks → system prompt]
+    FUSE --> GATE[Relevance gate +<br/>distinct-file cap]
+    GATE --> CTX[Top chunks → system prompt]
     CTX --> LLM[(qwen-plus-latest<br/>grounded, streamed)]
     LLM --> ANS([Answer + sources])
   end
@@ -109,7 +112,17 @@ A worked example makes it concrete. Say the two arms return these top chunks:
 
 B wins because it ranks near the top of *both* arms. A is a close second despite topping the vector arm, since it's weaker on keywords. C and D each show up in only one arm, so they land well below the chunks both arms agree on. That agreement-rewarding behavior is the whole point.
 
-We fuse by rank instead of raw score on purpose. Vector cosine distance and `ts_rank` live on completely different scales, so adding the raw numbers would need per-corpus tuning to mean anything. Rank position sidesteps that and stays robust with zero tuning. After fusion we dedupe and keep the top handful (default 8, admin-configurable) for the prompt.
+We fuse by rank instead of raw score on purpose. Vector cosine distance and `ts_rank` live on completely different scales, so adding the raw numbers would need per-corpus tuning to mean anything. Rank position sidesteps that and stays robust with zero tuning.
+
+### What reaches the prompt — three admin knobs
+
+After fusion and dedupe, three settings shape the final context:
+
+- **Relevance threshold** — an optional floor on each chunk's *cosine similarity* to the question (0–1, default `0` = off). RRF decides the *order*; this gate decides what's *relevant enough* to keep. Cosine similarity is human-readable (≈0.5–0.7 for good hits), unlike the tiny RRF score, so it's the number admins actually calibrate against.
+- **Max distinct files** — caps how many separate documents may be cited per answer (default `3`), so a single file can't crowd out the rest.
+- **Top-N chunks** — how many ranked chunks feed the prompt (default `8`), bounding the LLM's context budget.
+
+A built-in **Debug Mode** (admin-only) shows both numbers on each source chip — the RRF rank-score *and* the 0–1 cosine similarity — so admins can see exactly what they're tuning.
 
 ## What we deliberately leave out
 
